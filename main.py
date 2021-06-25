@@ -3,9 +3,15 @@ from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
 from datetime import date
 from functools import wraps
+
+##Fix Absence of Anti – CSRF Tokens
+from flask_wtf import CsrfProtect
+
 from werkzeug.security import generate_password_hash, check_password_hash
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
+
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
 from forms import LoginForm, RegisterForm, CreatePostForm, CommentForm
 from flask_gravatar import Gravatar
@@ -24,10 +30,28 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
+##Fix Absence of Anti – CSRF Tokens
+csrf = CsrfProtect(app)
+
+##Fix X-Frame-Options
+@app.after_request
+def apply_caching(response):
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
+    return response
+
+##Fix X-Content-Type Options
+@app.after_request
+def add_header(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    return response
+
+
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
+
+
 
 
 ##CONFIGURE TABLE
@@ -65,11 +89,12 @@ class Comment(db.Model):
 db.create_all()
 
 
+
+
 def admin_only(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        if current_user.id != 1:
-            return abort(403)
+
         return f(*args, **kwargs)
     return decorated_function
 
