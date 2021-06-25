@@ -29,7 +29,8 @@
               {{post.subtitle}}
             </h3>
           </a>
-          <p class="post-meta">
+          <p class="post-meta">Posted
+            on {{post.date}}
             {% if current_user.id == 1: %}
             <a href="{{url_for('delete_post', post_id=post.id) }}">✘</a>
             {% endif %}
